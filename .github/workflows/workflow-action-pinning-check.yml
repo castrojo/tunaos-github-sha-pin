@@ -1,0 +1,49 @@
+name: Workflow action pinning (check)
+
+# Validates that every EXTERNAL GitHub Action in a workflow is pinned to a full
+# commit SHA (tuna-os/.github#176, recommendation 3b). A workflow that references
+# an action by a mutable ref (@v7, @main, @tag) lets that action's code change
+# under CI with no review and no new check -- a supply-chain window. Pinning to a
+# full 40-char SHA freezes the exact code that runs.
+#
+# This is the pinning half of the org's two-part Actions security baseline; the
+# permissions half is workflow-permissions-check.yml (tuna-os/.github#155). Both
+# scripts are dependency-free and live in scripts/, and both are shipped by
+# default in project-starter so every new repo gets the baseline.
+#
+# To adopt the baseline in a consumer repo, copy this file and
+# scripts/check-action-pinning.py into that repo, or call this job from an
+# existing CI workflow.
+#
+# Advisory until the in-flight remediation lands. The repo is not yet
+# pinning-compliant -- publish-flatpak.yml and workflow-permissions-check.yml
+# still reference third-party actions by tag (#209, #254, #253 pin them). Once
+# those merge, remove `continue-on-error: true` below to make this a blocking
+# gate, the same as workflow-permissions-check.yml.
+#
+# Internal `tuna-os/.github/.github/actions/*` actions are pinned to @main by
+# design (tuna-os/.github#157) and are deferred, not flagged, by the checker.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  action-pinning-check:
+    name: Workflow action pinning
+    runs-on: ubuntu-24.04
+    # Advisory until #209/#254/#253 land (see the note above).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Check action pinning
+        run: python3 scripts/check-action-pinning.py .github/workflows
