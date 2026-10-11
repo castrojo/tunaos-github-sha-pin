@@ -63,7 +63,7 @@ jobs:
           # diff against, and the report would degrade to whole-repo noise.
           fetch-depth: 0
 
-      - uses: tuna-os/.github/.github/actions/ste-lint@main
+      - uses: tuna-os/.github/.github/actions/ste-lint@da0153d94472c0e645f69820b3bae57487be3c43
         with:
           budget-file: ${{ inputs.budget-file }}
           budget: ${{ inputs.budget }}
