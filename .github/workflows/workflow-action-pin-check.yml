@@ -1,0 +1,35 @@
+name: Workflow action pins (check)
+
+# Validates that every GitHub Actions reference in this repo is pinned to an
+# immutable commit SHA (tuna-os/.github#285). A reference at a mutable ref -- a
+# branch (@main, @master) or a version tag (@v7.0.1) -- runs whatever code
+# exists at that ref on the day CI runs. For third-party actions that is an
+# upstream-maintainer (or supply-chain) risk; for the org's own reusable actions
+# and workflows it means a push to tuna-os/.github main cascades into every
+# consumer repo that references it.
+#
+# To adopt the baseline in a consumer repo, copy this file and
+# scripts/check-workflow-action-pins.py into that repo (project-starter ships
+# both by default), or call this job from an existing CI workflow.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  action-pin-check:
+    name: Workflow action pins
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14"
+      - name: Check workflow action pins
+        run: python3 scripts/check-workflow-action-pins.py .github/workflows
